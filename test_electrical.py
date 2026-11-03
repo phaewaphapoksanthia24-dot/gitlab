@@ -13,11 +13,13 @@ class TestDCAnalyzer(unittest.TestCase):
         self.assertAlmostEqual(result["current_a"], 0.0)
         self.assertAlmostEqual(result["power_w"], 0.0)
 
-    def test_rejects_nonpositive_resistance(self):
-        for resistance in (0, -1):
-            with self.subTest(resistance=resistance):
-                with self.assertRaises(ValueError):
-                    analyze_dc(12, resistance)
+    def test_rejects_zero_resistance(self):
+        with self.assertRaises(ValueError):
+            analyze_dc(12, 0)
+
+    def test_rejects_negative_resistance(self):
+        with self.assertRaises(ValueError):
+            analyze_dc(12, -1)
 
     def test_rejects_nonfinite_inputs(self):
         for voltage, resistance in ((float("nan"), 10), (12, float("inf"))):
