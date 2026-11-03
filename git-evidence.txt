@@ -1,0 +1,35 @@
+PS D:\git-lab-ee> git status
+On branch main
+Your branch is up to date with 'origin/main'.
+
+nothing to commit, working tree clean
+PS D:\git-lab-ee> git log --oneline --graph --decorate --all
+* a5d81d3 (HEAD -> main, origin/main, origin/HEAD) update
+* 01ba19e feat: calculate DC current and power
+* d25fc63 test: verify DC circuit results
+ \ 
+  * f1ed304 Initial commit
+* d7d5d3e (feature/input-validation) update
+* 72b0576 feat: calculate DC current and power
+* 42fcee8 test: verify DC circuit results
+PS D:\git-lab-ee> git remote -v
+origin  https://github.com/phaewaphapoksanthia24-dot/gitlab (fetch)
+origin  https://github.com/phaewaphapoksanthia24-dot/gitlab (push)
+PS D:\git-lab-ee> git status -sb
+## main...origin/main
+PS D:\git-lab-ee> python -m unittest -v
+test_known_values (test_electrical.TestDCAnalyzer) ... ok
+test_rejects_negative_resistance (test_electrical.TestDCAnalyzer) ... ok
+test_rejects_nonfinite_inputs (test_electrical.TestDCAnalyzer) ... ok
+test_rejects_zero_resistance (test_electrical.TestDCAnalyzer) ... ok
+test_zero_voltage (test_electrical.TestDCAnalyzer) ... ok
+test_parse_branches (test_electrical.TestDCNetwork) ... ok
+test_rejects_invalid_network_values (test_electrical.TestDCNetwork) ... ok
+test_rejects_nonfinite_voltage (test_electrical.TestDCNetwork) ... ok
+test_series_and_parallel_network (test_electrical.TestDCNetwork) ... ok
+
+----------------------------------------------------------------------
+Ran 9 tests in 0.001s
+
+OK
+PS D:\git-lab-ee> 
