@@ -22,6 +22,7 @@ W_SAT = (
     "จึงเป็นเพียงค่าประมาณ"
 )
 W_STIFF = "กระแสในตัวแบ่งน้อยกว่า 10 เท่าของ IB จุดทำงานจึงไวต่อ beta"
+W_DISAGREE = "ผลจากสองวิธีไม่ตรงกันเกิน tolerance — ตรวจสอบสูตรใน bias.py"
 
 
 class BiasInputError(ValueError):
@@ -111,6 +112,26 @@ def _thevenin(data: BiasInput) -> OperatingPoint:
     return OperatingPoint(vb=vb, ve=ve, vc=vc, vce=vc - ve, ib=ib, ic=ic, ie=ie)
 
 
+def _nodal(data: BiasInput) -> OperatingPoint:
+    conductance = 1 / data.r1 + 1 / data.r2
+    ve = (data.vcc / data.r1 - data.vbe * conductance) / (
+        conductance + 1 / ((data.beta + 1) * data.re)
+    )
+    ie = ve / data.re
+    ib = ie / (data.beta + 1)
+    ic = data.beta * ib
+    vb = ve + data.vbe
+    vc = data.vcc - ic * data.rc
+    return OperatingPoint(vb=vb, ve=ve, vc=vc, vce=vc - ve, ib=ib, ic=ic, ie=ie)
+
+
+def points_agree(a: OperatingPoint, b: OperatingPoint) -> bool:
+    return all(
+        math.isclose(getattr(a, field), getattr(b, field), rel_tol=1e-9, abs_tol=1e-12)
+        for field in ("vb", "ve", "vc", "vce", "ib", "ic", "ie")
+    )
+
+
 def analyze_bias(data: BiasInput) -> BiasResult:
     vbb = data.vcc * data.r2 / (data.r1 + data.r2)
 
@@ -121,6 +142,7 @@ def analyze_bias(data: BiasInput) -> BiasResult:
         return BiasResult(region="cutoff", warnings=(W_CUTOFF,), primary=point)
 
     primary = _thevenin(data)
+    independent = _nodal(data)
     warnings = []
     region = "active"
 
@@ -131,4 +153,14 @@ def analyze_bias(data: BiasInput) -> BiasResult:
     if data.vcc / (data.r1 + data.r2) < 10 * primary.ib:
         warnings.append(W_STIFF)
 
-    return BiasResult(region=region, warnings=tuple(warnings), primary=primary)
+    agreement_ok = points_agree(primary, independent)
+    if not agreement_ok:
+        warnings.append(W_DISAGREE)
+
+    return BiasResult(
+        region=region,
+        warnings=tuple(warnings),
+        primary=primary,
+        independent=independent,
+        agreement_ok=agreement_ok,
+    )

@@ -1,6 +1,6 @@
 import unittest
 
-from bias import BiasInput, BiasInputError, analyze_bias, parse_inputs
+from bias import BiasInput, BiasInputError, OperatingPoint, analyze_bias, parse_inputs, points_agree
 
 VALID = {
     "vcc": "12",
@@ -125,6 +125,37 @@ class TestPrimaryCalculation(unittest.TestCase):
 
     def test_stiff_divider_gets_no_warning(self):
         self.assertFalse(any("10 เท่า" in w for w in analyze_bias(make_input()).warnings))
+
+
+class TestIndependentCalculation(unittest.TestCase):
+    def test_independent_method_matches_known_values(self):
+        result = analyze_bias(make_input())
+        self.assertIsNotNone(result.independent)
+        self.assertAlmostEqual(result.independent.ve, 1.2991970451, delta=1e-9)
+        self.assertAlmostEqual(result.independent.vb, 1.9991970451, delta=1e-9)
+        self.assertAlmostEqual(result.independent.vc, 5.9542315722, delta=1e-9)
+        self.assertAlmostEqual(result.independent.ic, 1.2863337080e-3, delta=1e-9)
+
+    def test_methods_agree_across_parameter_sweep(self):
+        cases = [
+            dict(),
+            dict(beta=50.0),
+            dict(beta=200.0),
+            dict(vcc=22.0, r1=22000.0, r2=4700.0, rc=2200.0, re=470.0, beta=200.0, vbe=0.65),
+            dict(rc=10000.0),
+        ]
+        for overrides in cases:
+            with self.subTest(**overrides):
+                result = analyze_bias(make_input(**overrides))
+                self.assertIsNotNone(result.independent)
+                self.assertTrue(result.agreement_ok)
+                self.assertFalse(any("ไม่ตรงกัน" in w for w in result.warnings))
+
+    def test_points_agree_rejects_mismatch(self):
+        a = OperatingPoint(vb=1.0, ve=1.0, vc=1.0, vce=1.0, ib=1.0, ic=1.0, ie=1.0)
+        b = OperatingPoint(vb=1.0, ve=1.0, vc=1.0, vce=1.0, ib=1.0, ic=1.0, ie=1.01)
+        self.assertTrue(points_agree(a, a))
+        self.assertFalse(points_agree(a, b))
 
 
 if __name__ == "__main__":
