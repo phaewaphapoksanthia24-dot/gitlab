@@ -59,6 +59,47 @@
 
     <button type="submit">คำนวณ</button>
   </form>
+
+  {% if result %}
+  <section class="results">
+    <p class="region">โหมดการทำงาน: {{ region_label }}</p>
+
+    {% if result.independent %}
+    <table>
+      <thead>
+        <tr>
+          <th>ค่า</th>
+          <th>หน่วย</th>
+          <th>Thevenin</th>
+          <th>Nodal</th>
+          <th>ต่าง</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in rows %}
+        <tr>
+          <td>{{ row.label }}</td>
+          <td>{{ row.unit }}</td>
+          <td>{{ row.primary }}</td>
+          <td>{{ row.independent }}</td>
+          <td>{{ row.delta }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p class="note">ไม่เทียบผล: วงจรอยู่ในโหมด cutoff</p>
+    {% endif %}
+
+    {% if result.warnings %}
+    <ul class="warning">
+      {% for warning in result.warnings %}
+      <li>{{ warning }}</li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+  </section>
+  {% endif %}
 </main>
 </body>
 </html>
