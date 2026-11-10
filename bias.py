@@ -4,25 +4,35 @@ from typing import Mapping
 
 FIELDS = ("vcc", "r1", "r2", "rc", "re", "beta", "vbe")
 
-EMPTY = "กรุณากรอกค่านี้"
-NOT_NUMBER = "ต้องเป็นตัวเลข"
-NOT_FINITE = "ต้องเป็นตัวเลขจำกัด"
-MUST_BE_POSITIVE = "ต้องมากกว่า 0"
-BETA_POSITIVE = "beta ต้องมากกว่า 0"
-VBE_NON_NEGATIVE = "VBE ต้องไม่ติดลบ"
-VBE_BELOW_VCC = "VBE ต้องน้อยกว่า VCC"
+EMPTY = "This field is required."
+NOT_NUMBER = "Enter a number."
+NOT_FINITE = "Enter a finite number."
+MUST_BE_POSITIVE = "Must be greater than 0."
+BETA_POSITIVE = "beta must be greater than 0."
+VBE_NON_NEGATIVE = "VBE cannot be negative."
+VBE_BELOW_VCC = "VBE must be less than VCC."
 
 POSITIVE_FIELDS = ("vcc", "r1", "r2", "rc", "re")
 
+UNIT_FACTORS = {
+    "vcc": {"V": 1.0, "mV": 1e-3},
+    "r1": {"Ω": 1.0, "kΩ": 1e3, "MΩ": 1e6},
+    "r2": {"Ω": 1.0, "kΩ": 1e3, "MΩ": 1e6},
+    "rc": {"Ω": 1.0, "kΩ": 1e3, "MΩ": 1e6},
+    "re": {"Ω": 1.0, "kΩ": 1e3, "MΩ": 1e6},
+    "beta": {},
+    "vbe": {"V": 1.0, "mV": 1e-3},
+}
+
 VCE_SAT = 0.2
 
-W_CUTOFF = "โหมด cutoff: VBB ≤ VBE ทรานซิสเตอร์ไม่นำกระแส"
+W_CUTOFF = "Cutoff: VBB ≤ VBE, the transistor is off."
 W_SAT = (
-    "โหมด saturation: VCE ต่ำกว่า 0.2 V ค่าที่แสดงมาจากสมมติฐาน active region "
-    "จึงเป็นเพียงค่าประมาณ"
+    "Saturation: VCE is below 0.2 V, so the values assume the active region "
+    "and are only approximate."
 )
-W_STIFF = "กระแสในตัวแบ่งน้อยกว่า 10 เท่าของ IB จุดทำงานจึงไวต่อ beta"
-W_DISAGREE = "ผลจากสองวิธีไม่ตรงกันเกิน tolerance — ตรวจสอบสูตรใน bias.py"
+W_STIFF = "The divider is not stiff: its current is less than 10× IB, so the bias point depends on beta."
+W_DISAGREE = "The two methods disagree beyond tolerance — check the formulas in bias.py."
 
 
 class BiasInputError(ValueError):
@@ -59,7 +69,7 @@ def parse_inputs(raw: Mapping[str, str]) -> BiasInput:
         if not math.isfinite(number):
             errors[field] = NOT_FINITE
             continue
-        values[field] = number
+        values[field] = number * UNIT_FACTORS[field].get(raw.get(f"{field}_unit", ""), 1.0)
 
     for field in POSITIVE_FIELDS:
         if field in values and values[field] <= 0:
