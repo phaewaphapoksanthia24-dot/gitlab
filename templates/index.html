@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>BJT Common-Emitter DC Bias</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<main>
+  <h1>BJT Common-Emitter DC Bias</h1>
+  <p class="hint">
+    ENG29 2121 — กรอกค่าองค์ประกอบวงจรไบอัสแบบ voltage divider
+    แล้วคำนวณจุดทำงาน DC (IB แสดงเป็น µA, IC และ IE เป็น mA)
+  </p>
+
+  <form method="post" action="/calculate">
+    <div class="field">
+      <label for="vcc">VCC (V)</label>
+      <input id="vcc" name="vcc" inputmode="decimal" value="{{ values.get('vcc', '') }}">
+      {% if errors.get('vcc') %}<p class="error">{{ errors.get('vcc') }}</p>{% endif %}
+    </div>
+
+    <div class="field">
+      <label for="r1">R1 (Ω)</label>
+      <input id="r1" name="r1" inputmode="decimal" value="{{ values.get('r1', '') }}">
+      {% if errors.get('r1') %}<p class="error">{{ errors.get('r1') }}</p>{% endif %}
+    </div>
+
+    <div class="field">
+      <label for="r2">R2 (Ω)</label>
+      <input id="r2" name="r2" inputmode="decimal" value="{{ values.get('r2', '') }}">
+      {% if errors.get('r2') %}<p class="error">{{ errors.get('r2') }}</p>{% endif %}
+    </div>
+
+    <div class="field">
+      <label for="rc">RC (Ω)</label>
+      <input id="rc" name="rc" inputmode="decimal" value="{{ values.get('rc', '') }}">
+      {% if errors.get('rc') %}<p class="error">{{ errors.get('rc') }}</p>{% endif %}
+    </div>
+
+    <div class="field">
+      <label for="re">RE (Ω)</label>
+      <input id="re" name="re" inputmode="decimal" value="{{ values.get('re', '') }}">
+      {% if errors.get('re') %}<p class="error">{{ errors.get('re') }}</p>{% endif %}
+    </div>
+
+    <div class="field">
+      <label for="beta">beta</label>
+      <input id="beta" name="beta" inputmode="decimal" value="{{ values.get('beta', '') }}">
+      {% if errors.get('beta') %}<p class="error">{{ errors.get('beta') }}</p>{% endif %}
+    </div>
+
+    <div class="field">
+      <label for="vbe">VBE (V)</label>
+      <input id="vbe" name="vbe" inputmode="decimal" value="{{ values.get('vbe', '') }}">
+      {% if errors.get('vbe') %}<p class="error">{{ errors.get('vbe') }}</p>{% endif %}
+    </div>
+
+    <button type="submit">คำนวณ</button>
+  </form>
+</main>
+</body>
+</html>

@@ -1,0 +1,114 @@
+:root {
+  color-scheme: light dark;
+  --line: #c9ced6;
+  --error: #b3261e;
+  --warning: #8a5a00;
+  --accent: #1f4e8c;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 2rem 1rem;
+  font-family: "Segoe UI", "Noto Sans Thai", system-ui, sans-serif;
+  line-height: 1.5;
+}
+
+main {
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+h1 {
+  font-size: 1.4rem;
+  margin: 0 0 0.5rem;
+  color: var(--accent);
+}
+
+.hint {
+  margin: 0 0 1.5rem;
+  font-size: 0.92rem;
+  opacity: 0.8;
+}
+
+form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.9rem 1.2rem;
+  padding: 1.2rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.field label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.field input {
+  width: 100%;
+  padding: 0.45rem 0.55rem;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  font: inherit;
+}
+
+button {
+  grid-column: 1 / -1;
+  justify-self: start;
+  padding: 0.55rem 1.4rem;
+  border: 0;
+  border-radius: 6px;
+  background: var(--accent);
+  color: #fff;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+button:hover {
+  filter: brightness(1.1);
+}
+
+.error {
+  margin: 0.3rem 0 0;
+  font-size: 0.82rem;
+  color: var(--error);
+}
+
+.region {
+  font-weight: 700;
+}
+
+.note {
+  font-size: 0.9rem;
+  opacity: 0.85;
+}
+
+.warning {
+  padding-left: 1.2rem;
+  color: var(--warning);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+}
+
+th,
+td {
+  padding: 0.4rem 0.6rem;
+  border-bottom: 1px solid var(--line);
+  text-align: right;
+}
+
+th:first-child,
+td:first-child {
+  text-align: left;
+}
