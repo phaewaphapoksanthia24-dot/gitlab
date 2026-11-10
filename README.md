@@ -16,6 +16,23 @@
 แล้วแสดงเทียบกันพร้อมผลต่าง และเตือนเมื่อวงจรอยู่ในโหมด cutoff หรือ saturation
 รวมถึงเตือนเมื่อตัวแบ่งแรงดันไม่แข็ง (กระแสในตัวแบ่งน้อยกว่า 10 เท่าของ IB)
 
+หน้าจอเป็น HTML ล้วน (server-rendered ไม่มี JavaScript) — ช่องกรอกมีตัวเลือกหน่วย
+(V/mV และ Ω/kΩ/MΩ) และมี schematic วงจรเป็น inline SVG
+
+### ตัวอย่างหน้าจอ
+
+**Active region** — VCC 12 V, R1 100 kΩ, R2 22 kΩ, RC 2.2 kΩ, RE 1 kΩ, β 100
+
+![Active region](docs/images/active.png)
+
+**Cutoff region** — VCC 5 V, R2 10 kΩ (VBB ต่ำกว่า VBE)
+
+![Cutoff region](docs/images/cutoff.png)
+
+**Saturation region** — RC 10 kΩ (VCE ติดลบ ค่าที่ได้เป็นเพียงค่าประมาณ)
+
+![Saturation region](docs/images/saturation.png)
+
 ### วิธีรัน
 
 ```bash
