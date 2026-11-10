@@ -1,6 +1,6 @@
 import unittest
 
-from bias import BiasInputError, parse_inputs
+from bias import BiasInput, BiasInputError, analyze_bias, parse_inputs
 
 VALID = {
     "vcc": "12",
@@ -74,6 +74,57 @@ class TestParseInputs(unittest.TestCase):
 
     def test_fractional_beta_is_accepted(self):
         self.assertEqual(parse_inputs(dict(VALID, beta="100.5")).beta, 100.5)
+
+
+def make_input(**overrides):
+    base = dict(vcc=12.0, r1=47000.0, r2=10000.0, rc=4700.0, re=1000.0, beta=100.0, vbe=0.7)
+    base.update(overrides)
+    return BiasInput(**base)
+
+
+class TestPrimaryCalculation(unittest.TestCase):
+    def test_active_region_values(self):
+        result = analyze_bias(make_input())
+        self.assertEqual(result.region, "active")
+        self.assertAlmostEqual(result.primary.vb, 1.9991970451, delta=1e-9)
+        self.assertAlmostEqual(result.primary.ve, 1.2991970451, delta=1e-9)
+        self.assertAlmostEqual(result.primary.vc, 5.9542315722, delta=1e-9)
+        self.assertAlmostEqual(result.primary.vce, 4.6550345271, delta=1e-9)
+        self.assertAlmostEqual(result.primary.ib, 1.2863337080e-5, delta=1e-11)
+        self.assertAlmostEqual(result.primary.ic, 1.2863337080e-3, delta=1e-9)
+        self.assertAlmostEqual(result.primary.ie, 1.299197e-3, delta=1e-9)
+
+    def test_active_region_has_no_warnings(self):
+        self.assertEqual(analyze_bias(make_input()).warnings, ())
+
+    def test_cutoff_clamps_currents_and_reports_zero(self):
+        result = analyze_bias(make_input(vcc=5.0, r1=100000.0, r2=10000.0, rc=2200.0))
+        self.assertEqual(result.region, "cutoff")
+        self.assertAlmostEqual(result.primary.vb, 0.4545454545, delta=1e-9)
+        self.assertEqual(result.primary.ve, 0.0)
+        self.assertEqual(result.primary.vc, 5.0)
+        self.assertEqual(result.primary.vce, 5.0)
+        self.assertEqual(result.primary.ib, 0.0)
+        self.assertEqual(result.primary.ic, 0.0)
+        self.assertEqual(result.primary.ie, 0.0)
+        self.assertIsNone(result.independent)
+        self.assertIsNone(result.agreement_ok)
+        self.assertIn("cutoff", result.warnings[0])
+
+    def test_saturation_is_detected_and_values_stay_unclamped(self):
+        result = analyze_bias(make_input(rc=10000.0))
+        self.assertEqual(result.region, "saturation")
+        self.assertAlmostEqual(result.primary.vce, -2.1625341256, delta=1e-9)
+        self.assertAlmostEqual(result.primary.vc, -0.8633370805, delta=1e-9)
+        self.assertTrue(any("saturation" in w for w in result.warnings))
+
+    def test_non_stiff_divider_gets_a_warning(self):
+        result = analyze_bias(make_input(r1=10000.0, r2=10000.0, rc=100.0, re=47.0))
+        self.assertEqual(result.region, "active")
+        self.assertTrue(any("10 เท่า" in w for w in result.warnings))
+
+    def test_stiff_divider_gets_no_warning(self):
+        self.assertFalse(any("10 เท่า" in w for w in analyze_bias(make_input()).warnings))
 
 
 if __name__ == "__main__":

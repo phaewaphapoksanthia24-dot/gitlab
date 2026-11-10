@@ -14,6 +14,15 @@ VBE_BELOW_VCC = "VBE ต้องน้อยกว่า VCC"
 
 POSITIVE_FIELDS = ("vcc", "r1", "r2", "rc", "re")
 
+VCE_SAT = 0.2
+
+W_CUTOFF = "โหมด cutoff: VBB ≤ VBE ทรานซิสเตอร์ไม่นำกระแส"
+W_SAT = (
+    "โหมด saturation: VCE ต่ำกว่า 0.2 V ค่าที่แสดงมาจากสมมติฐาน active region "
+    "จึงเป็นเพียงค่าประมาณ"
+)
+W_STIFF = "กระแสในตัวแบ่งน้อยกว่า 10 เท่าของ IB จุดทำงานจึงไวต่อ beta"
+
 
 class BiasInputError(ValueError):
     def __init__(self, errors):
@@ -68,3 +77,58 @@ def parse_inputs(raw: Mapping[str, str]) -> BiasInput:
         raise BiasInputError(errors)
 
     return BiasInput(**values)
+
+
+@dataclass(frozen=True)
+class OperatingPoint:
+    vb: float
+    ve: float
+    vc: float
+    vce: float
+    ib: float
+    ic: float
+    ie: float
+
+
+@dataclass(frozen=True)
+class BiasResult:
+    region: str
+    warnings: tuple[str, ...]
+    primary: OperatingPoint
+    independent: OperatingPoint | None = None
+    agreement_ok: bool | None = None
+
+
+def _thevenin(data: BiasInput) -> OperatingPoint:
+    vbb = data.vcc * data.r2 / (data.r1 + data.r2)
+    rb = data.r1 * data.r2 / (data.r1 + data.r2)
+    ib = (vbb - data.vbe) / (rb + (data.beta + 1) * data.re)
+    ic = data.beta * ib
+    ie = (data.beta + 1) * ib
+    ve = ie * data.re
+    vb = data.vbe + ve
+    vc = data.vcc - ic * data.rc
+    return OperatingPoint(vb=vb, ve=ve, vc=vc, vce=vc - ve, ib=ib, ic=ic, ie=ie)
+
+
+def analyze_bias(data: BiasInput) -> BiasResult:
+    vbb = data.vcc * data.r2 / (data.r1 + data.r2)
+
+    if vbb <= data.vbe:
+        point = OperatingPoint(
+            vb=vbb, ve=0.0, vc=data.vcc, vce=data.vcc, ib=0.0, ic=0.0, ie=0.0
+        )
+        return BiasResult(region="cutoff", warnings=(W_CUTOFF,), primary=point)
+
+    primary = _thevenin(data)
+    warnings = []
+    region = "active"
+
+    if primary.vce < VCE_SAT:
+        region = "saturation"
+        warnings.append(W_SAT)
+
+    if data.vcc / (data.r1 + data.r2) < 10 * primary.ib:
+        warnings.append(W_STIFF)
+
+    return BiasResult(region=region, warnings=tuple(warnings), primary=primary)
