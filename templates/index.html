@@ -88,6 +88,24 @@
       </tbody>
     </table>
     {% else %}
+    <table>
+      <thead>
+        <tr>
+          <th>ค่า</th>
+          <th>หน่วย</th>
+          <th>ค่าที่คำนวณ</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in rows %}
+        <tr>
+          <td>{{ row.label }}</td>
+          <td>{{ row.unit }}</td>
+          <td>{{ row.primary }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
     <p class="note">ไม่เทียบผล: วงจรอยู่ในโหมด cutoff</p>
     {% endif %}
 

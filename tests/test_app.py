@@ -1,3 +1,4 @@
+import re
 import unittest
 
 from app import app
@@ -71,6 +72,13 @@ class TestCalculateRoute(unittest.TestCase):
         self.assertIn("Cutoff", body)
         self.assertIn("ไม่เทียบผล", body)
         self.assertNotIn("Thevenin", body)
+
+    def test_cutoff_still_shows_the_operating_point_values(self):
+        body = self.post(vcc="5", r1="100000", r2="10000", rc="2200").get_data(as_text=True)
+        compact = re.sub(r"\s+", "", body)
+        self.assertIn("<td>IB</td><td>µA</td><td>0</td>", compact)
+        self.assertIn("<td>IC</td><td>mA</td><td>0</td>", compact)
+        self.assertIn("<td>VCE</td><td>V</td><td>5</td>", compact)
 
     def test_saturation_shows_warning(self):
         body = self.post(rc="10000").get_data(as_text=True)
