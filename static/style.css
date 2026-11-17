@@ -260,14 +260,6 @@ button:hover {
   margin: -6px 0 12px;
 }
 
-.schematic-note {
-  margin: 0;
-  padding: 18px 4px;
-  color: var(--muted);
-  font-size: 0.9rem;
-  text-align: center;
-}
-
 .mode-label {
   margin: 0 0 8px;
   font-size: 0.85rem;

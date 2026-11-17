@@ -85,7 +85,7 @@
       Circuit: Common-Emitter Amplifier
     </h2>
 
-    {% if schematic %}
+    {% if mode == 'divider' %}
     <svg class="schematic" viewBox="0 0 340 380" role="img"
          aria-label="Voltage divider biased NPN common-emitter circuit">
       <title>Common-emitter amplifier with voltage-divider bias</title>
@@ -153,14 +153,115 @@
         <text x="212" y="182" class="value">β = {{ schematic.beta }}</text>
       </g>
     </svg>
-    {% else %}
-    <p class="schematic-note">
-      {% if mode == 'fixed' %}
-      Fixed Bias: RB connects VCC to the base, and the emitter is grounded directly.
-      {% else %}
-      Emitter Bias: RB connects VCC to the base, and RE connects the emitter to ground.
-      {% endif %}
-    </p>
+    {% elif mode == 'fixed' %}
+    <svg class="schematic" viewBox="0 0 340 380" role="img"
+         aria-label="Fixed biased NPN common-emitter circuit">
+      <title>Common-emitter amplifier with fixed bias</title>
+
+      <g class="wire">
+        <line x1="170" y1="34" x2="170" y2="48"></line>
+        <line x1="100" y1="48" x2="220" y2="48"></line>
+
+        <line x1="100" y1="48" x2="100" y2="58"></line>
+        <rect x="92" y="58" width="16" height="40" rx="2"></rect>
+        <line x1="100" y1="98" x2="100" y2="150"></line>
+
+        <line x1="220" y1="48" x2="220" y2="58"></line>
+        <rect x="212" y="58" width="16" height="40" rx="2"></rect>
+        <line x1="220" y1="98" x2="220" y2="150"></line>
+
+        <line x1="100" y1="150" x2="170" y2="190"></line>
+
+        <line x1="170" y1="174" x2="170" y2="206"></line>
+        <line x1="170" y1="182" x2="198" y2="164"></line>
+        <line x1="198" y1="164" x2="220" y2="150"></line>
+        <line x1="170" y1="198" x2="198" y2="216"></line>
+        <line x1="198" y1="216" x2="220" y2="230"></line>
+
+        <line x1="220" y1="230" x2="220" y2="320"></line>
+      </g>
+
+      <g class="ground">
+        <line x1="206" y1="320" x2="234" y2="320"></line>
+        <line x1="212" y1="326" x2="228" y2="326"></line>
+        <line x1="217" y1="332" x2="223" y2="332"></line>
+      </g>
+
+      <circle class="transistor" cx="184" cy="190" r="24"></circle>
+      <polygon class="arrow" points="198,216 188,215 193,207"></polygon>
+      <circle class="node" cx="170" cy="34" r="3.5"></circle>
+
+      <g class="labels">
+        <text x="170" y="22" text-anchor="middle" class="value">VCC = {{ schematic.vcc }}</text>
+
+        <text x="84" y="74" text-anchor="end">RB</text>
+        <text x="84" y="90" text-anchor="end" class="value">{{ schematic.rb }}</text>
+
+        <text x="236" y="74">RC</text>
+        <text x="236" y="90" class="value">{{ schematic.rc }}</text>
+
+        <text x="212" y="150">Q1</text>
+        <text x="212" y="166">NPN</text>
+        <text x="212" y="182" class="value">β = {{ schematic.beta }}</text>
+      </g>
+    </svg>
+    {% elif mode == 'emitter' %}
+    <svg class="schematic" viewBox="0 0 340 380" role="img"
+         aria-label="Emitter biased NPN common-emitter circuit">
+      <title>Common-emitter amplifier with emitter bias</title>
+
+      <g class="wire">
+        <line x1="170" y1="34" x2="170" y2="48"></line>
+        <line x1="100" y1="48" x2="220" y2="48"></line>
+
+        <line x1="100" y1="48" x2="100" y2="58"></line>
+        <rect x="92" y="58" width="16" height="40" rx="2"></rect>
+        <line x1="100" y1="98" x2="100" y2="150"></line>
+
+        <line x1="220" y1="48" x2="220" y2="58"></line>
+        <rect x="212" y="58" width="16" height="40" rx="2"></rect>
+        <line x1="220" y1="98" x2="220" y2="150"></line>
+
+        <line x1="100" y1="150" x2="170" y2="190"></line>
+
+        <line x1="170" y1="174" x2="170" y2="206"></line>
+        <line x1="170" y1="182" x2="198" y2="164"></line>
+        <line x1="198" y1="164" x2="220" y2="150"></line>
+        <line x1="170" y1="198" x2="198" y2="216"></line>
+        <line x1="198" y1="216" x2="220" y2="230"></line>
+
+        <line x1="220" y1="230" x2="220" y2="246"></line>
+        <rect x="212" y="246" width="16" height="40" rx="2"></rect>
+        <line x1="220" y1="286" x2="220" y2="320"></line>
+      </g>
+
+      <g class="ground">
+        <line x1="206" y1="320" x2="234" y2="320"></line>
+        <line x1="212" y1="326" x2="228" y2="326"></line>
+        <line x1="217" y1="332" x2="223" y2="332"></line>
+      </g>
+
+      <circle class="transistor" cx="184" cy="190" r="24"></circle>
+      <polygon class="arrow" points="198,216 188,215 193,207"></polygon>
+      <circle class="node" cx="170" cy="34" r="3.5"></circle>
+
+      <g class="labels">
+        <text x="170" y="22" text-anchor="middle" class="value">VCC = {{ schematic.vcc }}</text>
+
+        <text x="84" y="74" text-anchor="end">RB</text>
+        <text x="84" y="90" text-anchor="end" class="value">{{ schematic.rb }}</text>
+
+        <text x="236" y="74">RC</text>
+        <text x="236" y="90" class="value">{{ schematic.rc }}</text>
+
+        <text x="236" y="262">RE</text>
+        <text x="236" y="278" class="value">{{ schematic.re }}</text>
+
+        <text x="212" y="150">Q1</text>
+        <text x="212" y="166">NPN</text>
+        <text x="212" y="182" class="value">β = {{ schematic.beta }}</text>
+      </g>
+    </svg>
     {% endif %}
   </section>
 

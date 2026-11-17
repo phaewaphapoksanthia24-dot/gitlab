@@ -3,7 +3,6 @@ import math
 from flask import Flask, render_template, request
 
 from bias import (
-    FIELDS,
     MODE_DIVIDER,
     MODE_EMITTER,
     MODE_FIELDS,
@@ -167,7 +166,7 @@ def region_info(result):
 
 def schematic_labels(values, units):
     labels = {}
-    for field in FIELDS:
+    for field in values:
         value = (values.get(field) or "").strip()
         unit = (units.get(field) or "").strip()
         labels[field] = f"{value} {unit}".strip() if value else "—"
@@ -198,7 +197,7 @@ def render_page(
         comparison=build_comparison_rows(result) if result and result.independent else [],
         region=region_info(result) if result else None,
         warnings=list(warnings),
-        schematic=schematic_labels(values, units) if mode == MODE_DIVIDER else None,
+        schematic=schematic_labels(values, units),
     )
 
 
