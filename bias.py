@@ -1,8 +1,21 @@
+from __future__ import annotations
+
 import math
 from dataclasses import dataclass
 from typing import Mapping
 
 FIELDS = ("vcc", "r1", "r2", "rc", "re", "beta", "vbe")
+
+MODE_DIVIDER = "divider"
+MODE_FIXED = "fixed"
+MODE_EMITTER = "emitter"
+MODES = (MODE_DIVIDER, MODE_FIXED, MODE_EMITTER)
+
+MODE_FIELDS = {
+    MODE_DIVIDER: ("vcc", "r1", "r2", "rc", "re", "beta", "vbe"),
+    MODE_FIXED: ("vcc", "rc", "rb", "beta", "vbe"),
+    MODE_EMITTER: ("vcc", "rc", "rb", "re", "beta", "vbe"),
+}
 
 EMPTY = "This field is required."
 NOT_NUMBER = "Enter a number."
@@ -20,6 +33,7 @@ UNIT_FACTORS = {
     "r2": {"Ω": 1.0, "kΩ": 1e3, "MΩ": 1e6},
     "rc": {"Ω": 1.0, "kΩ": 1e3, "MΩ": 1e6},
     "re": {"Ω": 1.0, "kΩ": 1e3, "MΩ": 1e6},
+    "rb": {"Ω": 1.0, "kΩ": 1e3, "MΩ": 1e6},
     "beta": {},
     "vbe": {"V": 1.0, "mV": 1e-3},
 }
@@ -33,6 +47,10 @@ W_SAT = (
 )
 W_STIFF = "The divider is not stiff: its current is less than 10× IB, so the bias point depends on beta."
 W_DISAGREE = "The two methods disagree beyond tolerance — check the formulas in bias.py."
+W_FORWARD_ACTIVE = (
+    "Forward Active model may not apply: IB ≤ 0 or VCE < 0.2 V, so the values "
+    "above come from the active-region equations and are only approximate."
+)
 
 
 class BiasInputError(ValueError):
@@ -88,6 +106,60 @@ def parse_inputs(raw: Mapping[str, str]) -> BiasInput:
         raise BiasInputError(errors)
 
     return BiasInput(**values)
+
+
+def parse_mode_inputs(raw: Mapping[str, str], mode: str) -> ModeBiasInput:
+    if mode not in MODES:
+        raise BiasInputError({"mode": "Choose a valid bias mode."})
+
+    errors = {}
+    values = {}
+
+    for field in MODE_FIELDS[mode]:
+        text = (raw.get(field) or "").strip()
+        if not text:
+            errors[field] = EMPTY
+            continue
+        try:
+            number = float(text)
+        except ValueError:
+            errors[field] = NOT_NUMBER
+            continue
+        if not math.isfinite(number):
+            errors[field] = NOT_FINITE
+            continue
+        values[field] = number * UNIT_FACTORS[field].get(raw.get(f"{field}_unit", ""), 1.0)
+
+    for field in ("vcc", "rc", "rb", "re", "r1", "r2"):
+        if field in values and values[field] <= 0:
+            errors[field] = MUST_BE_POSITIVE
+
+    if "beta" in values and values["beta"] <= 0:
+        errors["beta"] = BETA_POSITIVE
+
+    if "vbe" in values:
+        if values["vbe"] < 0:
+            errors["vbe"] = VBE_NON_NEGATIVE
+        elif "vcc" in values and values["vbe"] >= values["vcc"]:
+            errors["vbe"] = VBE_BELOW_VCC
+
+    if errors:
+        raise BiasInputError(errors)
+
+    return ModeBiasInput(mode=mode, **values)
+
+
+@dataclass(frozen=True)
+class ModeBiasInput:
+    mode: str
+    vcc: float
+    rc: float
+    beta: float
+    vbe: float
+    r1: float | None = None
+    r2: float | None = None
+    re: float | None = None
+    rb: float | None = None
 
 
 @dataclass(frozen=True)
@@ -173,4 +245,58 @@ def analyze_bias(data: BiasInput) -> BiasResult:
         primary=primary,
         independent=independent,
         agreement_ok=agreement_ok,
+    )
+
+
+def _fixed(data: ModeBiasInput) -> OperatingPoint:
+    ib = (data.vcc - data.vbe) / data.rb
+    ic = data.beta * ib
+    ie = (data.beta + 1) * ib
+    ve = 0.0
+    vb = ve + data.vbe
+    vc = data.vcc - ic * data.rc
+    return OperatingPoint(vb=vb, ve=ve, vc=vc, vce=vc - ve, ib=ib, ic=ic, ie=ie)
+
+
+def _emitter(data: ModeBiasInput) -> OperatingPoint:
+    ib = (data.vcc - data.vbe) / (data.rb + (data.beta + 1) * data.re)
+    ic = data.beta * ib
+    ie = (data.beta + 1) * ib
+    ve = ie * data.re
+    vb = ve + data.vbe
+    vc = data.vcc - ic * data.rc
+    return OperatingPoint(vb=vb, ve=ve, vc=vc, vce=vc - ve, ib=ib, ic=ic, ie=ie)
+
+
+def analyze_mode(data: ModeBiasInput) -> BiasResult:
+    if data.mode == MODE_DIVIDER:
+        return analyze_bias(
+            BiasInput(
+                vcc=data.vcc,
+                r1=data.r1,
+                r2=data.r2,
+                rc=data.rc,
+                re=data.re,
+                beta=data.beta,
+                vbe=data.vbe,
+            )
+        )
+
+    if data.mode == MODE_FIXED:
+        point = _fixed(data)
+    elif data.mode == MODE_EMITTER:
+        point = _emitter(data)
+    else:
+        raise ValueError(f"Unknown bias mode: {data.mode}")
+
+    warnings = []
+    if point.ib <= 0 or point.vce < VCE_SAT:
+        warnings.append(W_FORWARD_ACTIVE)
+
+    return BiasResult(
+        region="active",
+        warnings=tuple(warnings),
+        primary=point,
+        independent=None,
+        agreement_ok=None,
     )
