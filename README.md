@@ -88,16 +88,32 @@ python -m venv .venv
 
 ### การตรวจรับ Lab 03 (A1–A5)
 
-ตารางผลตรวจพร้อมค่าอ้างอิงอิสระและหลักฐานอยู่ที่
-[`docs/validation.md`](docs/validation.md) — สรุป:
+เกณฑ์ร่วม: V<sub>CC</sub> = 12 V, R<sub>C</sub> = 2.2 kΩ, β = 100, V<sub>BE</sub> = 0.70 V
+tolerance I<sub>C</sub> ±0.01 mA และ V<sub>CE</sub> ±0.02 V เทียบค่าอ้างอิงที่ยังไม่ปัดเศษ
+(คำนวณแยกก่อนเปิดเว็บ) — รายละเอียดและข้อความคัดจากหน้าเว็บอยู่ใน
+[`docs/validation.md`](docs/validation.md)
 
-| กรณี | โหมด | IC (mA) | VCE (V) | สถานะ |
-|---|---|---|---|---|
-| A1 | Voltage Divider (เหมือน Lab 02) | 1.23 | 8.05 | PASS |
-| A2 | Fixed, RB 1 MΩ | 1.13 | 9.51 | PASS |
-| A3 | Emitter, RB 1 MΩ, RE 1 kΩ | 1.03 | 8.71 | PASS |
-| A4 | Emitter, RE 2 kΩ | 0.94 | 8.03 | PASS |
-| A5 | Fixed, RB = 0 → error | — | — | PASS |
+หน่วย: อินพุตแรงดัน V, ตัวต้านทาน kΩ/MΩ; ผลลัพธ์ VB/VE/VC/VCE เป็น V,
+IB เป็น µA, IC/IE เป็น mA
+
+| กรณี | อินพุต (โหมด + ค่าที่กรอก) | ค่าคาดหมาย | ผลจริงจากหน้าเว็บ | หน่วย | วิธีตรวจ | สถานะ | หลักฐาน |
+|---|---|---|---|---|---|---|---|
+| A1 · โหมดเดิม | Divider · R1=100 kΩ, R2=22 kΩ, RE=1 kΩ, VCC=12 V | IC 1.229858 · VCE 8.052155 และตรงกับ Lab 2 | VB 1.94 · VE 1.24 · VC 9.29 · VCE 8.05 · IB 12.3 · IC 1.23 · IE 1.24 | V, µA, mA | OpenCode Browser | PASS | ข้อความคัดใน `docs/validation.md` + ตรง baseline Lab 2 |
+| A2 · Fixed | Fixed · RB=1 MΩ, VCC=12 V (ไม่มีช่อง R1/R2/RE) | IC 1.130000 · VCE 9.514000 | VB 0.70 · VE 0.00 · VC 9.51 · VCE 9.51 · IB 11.3 · IC 1.13 · IE 1.14 | V, µA, mA | OpenCode Browser | PASS | ข้อความคัดใน `docs/validation.md` |
+| A3 · Emitter | Emitter · RB=1 MΩ, RE=1 kΩ, VCC=12 V | IC 1.026340 · VCE 8.705450 | VB 1.74 · VE 1.04 · VC 9.74 · VCE 8.71 · IB 10.3 · IC 1.03 · IE 1.04 | V, µA, mA | OpenCode Browser | PASS | ข้อความคัดใน `docs/validation.md` |
+| A4 · เปลี่ยนค่าเดียว | Emitter · เหมือน A3 แต่ RE=2 kΩ, VCC=12 V | IC ลดจาก A3 → 0.940100 · VCE 8.032779 | VB 2.60 · VE 1.90 · VC 9.93 · VCE 8.03 · IB 9.4 · IC 0.94 · IE 0.95 | V, µA, mA | OpenCode Browser | PASS | ภาพ `docs/images/lab03-a4-emitter.png` + ข้อความคัด |
+| A5 · อินพุตผิด | Fixed · RB=0, VCC=12 V | มีข้อความให้แก้ RB, เว็บไม่ล่ม, ไม่มีผลรอบก่อน | ใต้ช่อง RB ขึ้น `Must be greater than 0.` · ไม่มีตารางผล · ไม่มี `Mode:` ค้าง | — (ไม่มีผลลัพธ์) | OpenCode Browser | PASS | ภาพ `docs/images/lab03-a5-rb-error.png` + ข้อความคัด |
+
+ตัวอย่างข้อความคัดจากหน้าเว็บ (A4):
+
+```
+Mode: Emitter Bias
+VB 2.60 V    VE 1.90 V    VC 9.93 V    VCE 8.03 V
+IB 9.4 µA    IC 0.94 mA   IE 0.95 mA
+Schematic: RB 1 MΩ · RC 2.2 kΩ · RE 2 kΩ
+```
 
 ตรวจด้วย **OpenCode Browser** กับเซิร์ฟเวอร์จริงบน `http://127.0.0.1:5000`
 (กรอกฟอร์มและกด Calculate ในเบราว์เซอร์จริง ไม่ได้เรียกฟังก์ชัน Python ตรง)
+เหตุที่ไม่ได้ใช้ Playwright MCP: เซสชันนี้ยังโหลด MCP ไม่ได้ (ต้อง restart
+OpenCode เพื่ออ่าน config) จึงใช้ OpenCode Browser ซึ่งใบงานอนุญาตเป็นวิธีสำรอง
