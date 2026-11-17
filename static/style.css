@@ -228,6 +228,53 @@ button:hover {
   color: var(--off-ink);
 }
 
+.mode-switch {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+  align-items: end;
+  margin-bottom: 14px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--line);
+}
+
+.mode-switch label {
+  grid-column: 1 / -1;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.mode-switch select {
+  min-width: 0;
+}
+
+.mode-switch button {
+  width: auto;
+  margin-top: 0;
+  padding: 6px 12px;
+  font-size: 0.85rem;
+}
+
+.form-error {
+  margin: -6px 0 12px;
+}
+
+.schematic-note {
+  margin: 0;
+  padding: 18px 4px;
+  color: var(--muted);
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.mode-label {
+  margin: 0 0 8px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--accent);
+}
+
 /* ---------- schematic ---------- */
 
 .schematic {

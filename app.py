@@ -4,23 +4,52 @@ from flask import Flask, render_template, request
 
 from bias import (
     FIELDS,
+    MODE_DIVIDER,
+    MODE_EMITTER,
+    MODE_FIELDS,
+    MODE_FIXED,
+    MODES,
     W_CUTOFF,
+    W_FORWARD_ACTIVE,
     W_SAT,
     BiasInputError,
-    analyze_bias,
-    parse_inputs,
+    analyze_mode,
+    parse_mode_inputs,
 )
 
 app = Flask(__name__)
 
+MODE_LABELS = {
+    MODE_DIVIDER: "Voltage Divider Bias",
+    MODE_FIXED: "Fixed Bias",
+    MODE_EMITTER: "Emitter Bias",
+}
+
 DEFAULT_VALUES = {
-    "vcc": "12.0",
-    "r1": "100",
-    "r2": "22",
-    "rc": "2.2",
-    "re": "1.0",
-    "beta": "100",
-    "vbe": "0.70",
+    MODE_DIVIDER: {
+        "vcc": "12.0",
+        "r1": "100",
+        "r2": "22",
+        "rc": "2.2",
+        "re": "1.0",
+        "beta": "100",
+        "vbe": "0.70",
+    },
+    MODE_FIXED: {
+        "vcc": "12.0",
+        "rc": "2.2",
+        "rb": "1000",
+        "beta": "100",
+        "vbe": "0.70",
+    },
+    MODE_EMITTER: {
+        "vcc": "12.0",
+        "rc": "2.2",
+        "rb": "1000",
+        "re": "1.0",
+        "beta": "100",
+        "vbe": "0.70",
+    },
 }
 
 DEFAULT_UNITS = {
@@ -29,19 +58,25 @@ DEFAULT_UNITS = {
     "r2": "kΩ",
     "rc": "kΩ",
     "re": "kΩ",
+    "rb": "kΩ",
     "beta": "",
     "vbe": "V",
 }
 
-INPUT_FIELDS = (
-    {"name": "vcc", "label": "VCC", "hint": "Supply Voltage", "units": ("V", "mV")},
-    {"name": "r1", "label": "R1", "hint": "Upper Divider", "units": ("Ω", "kΩ", "MΩ")},
-    {"name": "r2", "label": "R2", "hint": "Lower Divider", "units": ("Ω", "kΩ", "MΩ")},
-    {"name": "rc", "label": "RC", "hint": "Collector Resistor", "units": ("Ω", "kΩ", "MΩ")},
-    {"name": "re", "label": "RE", "hint": "Emitter Resistor", "units": ("Ω", "kΩ", "MΩ")},
-    {"name": "beta", "label": "β", "hint": "Current Gain", "units": ()},
-    {"name": "vbe", "label": "VBE", "hint": "Base-Emitter Voltage", "units": ("V", "mV")},
-)
+FIELD_DEFS = {
+    "vcc": {"name": "vcc", "label": "VCC", "hint": "Supply Voltage", "units": ("V", "mV")},
+    "r1": {"name": "r1", "label": "R1", "hint": "Upper Divider", "units": ("Ω", "kΩ", "MΩ")},
+    "r2": {"name": "r2", "label": "R2", "hint": "Lower Divider", "units": ("Ω", "kΩ", "MΩ")},
+    "rc": {"name": "rc", "label": "RC", "hint": "Collector Resistor", "units": ("Ω", "kΩ", "MΩ")},
+    "re": {"name": "re", "label": "RE", "hint": "Emitter Resistor", "units": ("Ω", "kΩ", "MΩ")},
+    "rb": {"name": "rb", "label": "RB", "hint": "Base Resistor", "units": ("Ω", "kΩ", "MΩ")},
+    "beta": {"name": "beta", "label": "β", "hint": "Current Gain", "units": ()},
+    "vbe": {"name": "vbe", "label": "VBE", "hint": "Base-Emitter Voltage", "units": ("V", "mV")},
+}
+
+
+def fields_for_mode(mode):
+    return tuple(FIELD_DEFS[field] for field in MODE_FIELDS[mode])
 
 RESULT_ROWS = (
     ("VB", "vb"),
@@ -102,6 +137,15 @@ def build_comparison_rows(result):
 
 def region_info(result):
     vce = result.primary.vce
+    if W_FORWARD_ACTIVE in result.warnings:
+        return {
+            "kind": "warn",
+            "title": "Forward Active model may not apply",
+            "detail": (
+                f"IB = {result.primary.ib * 1e6:.1f} µA and VCE = {vce:.2f} V; "
+                "the values come from the active-region equations and are only approximate."
+            ),
+        }
     if result.region == "active":
         return {
             "kind": "ok",
@@ -130,42 +174,71 @@ def schematic_labels(values, units):
     return labels
 
 
-def render_page(values, units, errors=None, result=None, warnings=()):
+def render_page(
+    values,
+    units,
+    mode=MODE_DIVIDER,
+    mode_error=None,
+    errors=None,
+    result=None,
+    warnings=(),
+):
     return render_template(
         "index.html",
         values=values,
         units=units,
+        mode=mode,
+        mode_label=MODE_LABELS[mode],
+        mode_labels=MODE_LABELS,
+        mode_error=mode_error,
         errors=errors or {},
-        fields=INPUT_FIELDS,
+        fields=fields_for_mode(mode),
         result=result,
         rows=build_result_rows(result) if result else [],
         comparison=build_comparison_rows(result) if result and result.independent else [],
         region=region_info(result) if result else None,
         warnings=list(warnings),
-        schematic=schematic_labels(values, units),
+        schematic=schematic_labels(values, units) if mode == MODE_DIVIDER else None,
     )
 
 
 @app.get("/")
 def index():
-    return render_page(DEFAULT_VALUES, DEFAULT_UNITS)
+    mode = request.args.get("mode", MODE_DIVIDER)
+    mode_error = None
+    if mode not in MODES:
+        mode_error = "Choose a valid bias mode."
+        mode = MODE_DIVIDER
+    return render_page(
+        DEFAULT_VALUES[mode], DEFAULT_UNITS, mode=mode, mode_error=mode_error
+    )
 
 
 @app.post("/calculate")
 def calculate():
-    values = {field: request.form.get(field, "") for field in FIELDS}
-    units = {field: request.form.get(f"{field}_unit", "") for field in FIELDS}
+    mode = request.form.get("mode", MODE_DIVIDER)
+    if mode not in MODES:
+        return render_page(
+            DEFAULT_VALUES[MODE_DIVIDER],
+            DEFAULT_UNITS,
+            mode=MODE_DIVIDER,
+            mode_error="Choose a valid bias mode.",
+        )
+
+    fields = MODE_FIELDS[mode]
+    values = {field: request.form.get(field, "") for field in fields}
+    units = {field: request.form.get(f"{field}_unit", "") for field in fields}
     raw = dict(values)
-    raw.update({f"{field}_unit": units[field] for field in FIELDS})
+    raw.update({f"{field}_unit": units[field] for field in fields})
 
     try:
-        data = parse_inputs(raw)
+        data = parse_mode_inputs(raw, mode)
     except BiasInputError as error:
-        return render_page(values, units, errors=error.errors)
+        return render_page(values, units, mode=mode, errors=error.errors)
 
-    result = analyze_bias(data)
+    result = analyze_mode(data)
     extra_warnings = [w for w in result.warnings if w not in (W_CUTOFF, W_SAT)]
-    return render_page(values, units, result=result, warnings=extra_warnings)
+    return render_page(values, units, mode=mode, result=result, warnings=extra_warnings)
 
 
 if __name__ == "__main__":

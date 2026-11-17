@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Lab 02: BJT DC Bias Web App</title>
+  <title>Lab 03: BJT DC Bias Web App</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
@@ -15,8 +15,8 @@
       <path d="M20 12V5M28 12V5M20 43v-7M28 43v-7M12 20H5M12 28H5M43 20h-7M43 28h-7"></path>
     </svg>
     <div>
-      <h1>Lab 02: BJT DC Bias Web App</h1>
-      <p class="subtitle">ENG29 2121 – Common Emitter (Voltage Divider Bias)</p>
+      <h1>Lab 03: BJT DC Bias Web App</h1>
+      <p class="subtitle">ENG29 2121 – Common Emitter (Three Bias Modes)</p>
     </div>
   </div>
   <div class="course-badge">
@@ -32,7 +32,21 @@
       Input Parameters
     </h2>
 
+    <form class="mode-switch" method="get" action="/">
+      <label for="mode">Bias mode</label>
+      <select id="mode" name="mode" aria-label="Bias mode">
+        {% for value, label in mode_labels.items() %}
+        <option value="{{ value }}"{% if mode == value %} selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+      <button type="submit">Load mode</button>
+    </form>
+    {% if mode_error %}
+    <p class="error form-error">{{ mode_error }}</p>
+    {% endif %}
+
     <form method="post" action="/calculate">
+      <input type="hidden" name="mode" value="{{ mode }}">
       {% for field in fields %}
       <div class="field">
         <label for="{{ field.name }}">
@@ -71,6 +85,7 @@
       Circuit: Common-Emitter Amplifier
     </h2>
 
+    {% if schematic %}
     <svg class="schematic" viewBox="0 0 340 380" role="img"
          aria-label="Voltage divider biased NPN common-emitter circuit">
       <title>Common-emitter amplifier with voltage-divider bias</title>
@@ -138,6 +153,15 @@
         <text x="212" y="182" class="value">β = {{ schematic.beta }}</text>
       </g>
     </svg>
+    {% else %}
+    <p class="schematic-note">
+      {% if mode == 'fixed' %}
+      Fixed Bias: RB connects VCC to the base, and the emitter is grounded directly.
+      {% else %}
+      Emitter Bias: RB connects VCC to the base, and RE connects the emitter to ground.
+      {% endif %}
+    </p>
+    {% endif %}
   </section>
 
   <section class="panel results">
@@ -147,6 +171,7 @@
     </h2>
 
     {% if result %}
+    <p class="mode-label">Mode: {{ mode_label }}</p>
     <table class="result-table">
       <tbody>
         {% for row in rows %}
@@ -211,13 +236,14 @@
 <footer class="panel goal">
   <h2>
     <svg class="panel-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><circle cx="12" cy="12" r="4"></circle><circle cx="12" cy="12" r="1"></circle></svg>
-    Week 2 Goal
+    Lab 03 Goal
   </h2>
   <p>
-    <strong>Rough target for this lab:</strong> build a Flask web app that takes the
-    circuit parameters, computes the BJT DC bias (V<sub>B</sub>, V<sub>E</sub>, V<sub>C</sub>,
-    V<sub>CE</sub>, I<sub>B</sub>, I<sub>C</sub>, I<sub>E</sub>) for a common-emitter
-    amplifier with voltage-divider bias, and displays the results.
+    <strong>Rough target for this lab:</strong> extend the Lab 02 Flask app so it can
+    select Voltage Divider, Fixed, and Emitter bias, validate only the fields each
+    mode needs, and display V<sub>B</sub>, V<sub>E</sub>, V<sub>C</sub>,
+    V<sub>CE</sub>, I<sub>B</sub>, I<sub>C</sub>, I<sub>E</sub>. The Voltage
+    Divider result must stay the same as Lab 02.
   </p>
 </footer>
 </body>
