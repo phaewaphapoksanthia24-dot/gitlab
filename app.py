@@ -237,7 +237,9 @@ def calculate():
         return render_page(values, units, mode=mode, errors=error.errors)
 
     result = analyze_mode(data)
-    extra_warnings = [w for w in result.warnings if w not in (W_CUTOFF, W_SAT)]
+    extra_warnings = [
+        w for w in result.warnings if w not in (W_CUTOFF, W_SAT, W_FORWARD_ACTIVE)
+    ]
     return render_page(values, units, mode=mode, result=result, warnings=extra_warnings)
 
 
