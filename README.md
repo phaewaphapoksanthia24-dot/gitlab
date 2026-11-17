@@ -13,7 +13,8 @@
 (IB เป็น µA, IC/IE เป็น mA)
 
 หน้าจอเป็น HTML ล้วน (server-rendered ไม่มี JavaScript) — ช่องกรอกมีตัวเลือกหน่วย
-(V/mV และ Ω/kΩ/MΩ) และมี schematic วงจรเป็น inline SVG สำหรับโหมด voltage divider
+(V/mV และ Ω/kΩ/MΩ) และทุกโหมดมี schematic วงจรของตัวเองเป็น inline SVG
+พร้อมค่าที่กรอก
 
 ### Lab 02 — Voltage Divider Bias
 
@@ -38,6 +39,7 @@ cutoff หรือ saturation รวมถึงเตือนเมื่อ�
 `VB = VE + VBE`, `VC = VCC − IC·RC`, `VCE = VC − VE`
 
 - เปลี่ยนโหมดแล้วโหลดฟอร์มใหม่ผ่าน server (`GET /?mode=fixed`) — ไม่ใช้ JavaScript
+- แต่ละโหมดมี schematic ของตัวเอง (divider / fixed / emitter) แสดงค่าที่กรอกอยู่บนรูป
 - validation ตรวจเฉพาะช่องของโหมดนั้น และแจ้ง error ใต้ช่องที่ผิด
 - โหมดที่ไม่รู้จักจะขึ้น error ไม่ถูกตีความเป็น voltage divider เงียบ ๆ
 - ถ้า `IB ≤ 0` หรือ `VCE < 0.2 V` จะเตือนว่าแบบจำลอง Forward Active อาจใช้ไม่ได้

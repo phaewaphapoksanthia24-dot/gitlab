@@ -62,3 +62,18 @@ Fixed Bias, RB=1 MΩ, RC=22 kΩ (กระแสสะสมสูงจน VCE 
 - ผลที่เห็น: VC −12.86 V · VCE −12.86 V และขึ้นคำเตือน
   “Forward Active model may not apply … IB ≤ 0 or VCE < 0.2 V” หนึ่งครั้ง พร้อมค่า IB/VCE
 - สถานะ: PASS (OpenCode Browser)
+
+### ตรวจเพิ่ม: schematic ของแต่ละโหมด
+
+เดิมโหมด Fixed/Emitter แสดงเพียงข้อความสั้น จึงเพิ่ม SVG ของแต่ละโหมด
+และตรวจในเบราว์เซอร์ว่ารูปตรงกับวงจรและค่าที่กรอก
+
+| โหมด | สิ่งที่เห็นบนรูป | สถานะ |
+|---|---|---|
+| Divider | R1, R2, RC, RE + ค่าที่กรอก | PASS |
+| Fixed | RB จาก VCC ลงเบส, RC ลงคอลเลกเตอร์, อีมิตเตอร์ลงกราวด์ตรง (ไม่มี R2/RE) | PASS |
+| Emitter | RB จาก VCC ลงเบส, RC ลงคอลเลกเตอร์, RE จากอีมิตเตอร์ลงกราวด์ (ไม่มี R2) | PASS |
+
+- ค่าบนรูปเปลี่ยนตามที่กรอก เช่น RB 1 MΩ และ RE 2 kΩ ใน A4
+- หน้า error (RB=0) ยังแสดงรูปของโหมด Fixed
+- screenshot ที่อัปเดตแล้ว: `docs/images/lab03-a4-emitter.png`, `docs/images/lab03-a5-rb-error.png`
