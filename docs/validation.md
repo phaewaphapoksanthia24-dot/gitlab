@@ -39,13 +39,47 @@ IB 12.3 µA, IC 1.23 mA, IE 1.24 mA — ตรงกับค่าอ้าง�
 
 ## ตารางบันทึกผลจริง
 
-| กรณี | เลือกโหมดและกรอกค่า | คาดหมายก่อนรัน | ผลที่เห็น | วิธีตรวจ | สถานะ | หลักฐาน |
-|---|---|---|---|---|---|---|
-| A1 · โหมดเดิม | Divider · R1=100 kΩ, R2=22 kΩ, RE=1 kΩ | IC 1.229858 mA · VCE 8.052155 V และตรงกับ Lab 2 | Mode: Voltage Divider Bias · VB 1.94 V · VE 1.24 V · VC 9.29 V · VCE 8.05 V · IB 12.3 µA · IC 1.23 mA · IE 1.24 mA | OpenCode Browser | PASS | Snapshot ของ `/calculate` ตรงกับ baseline Lab 2 ทุกค่า |
-| A2 · Fixed | Fixed · RB=1 MΩ (ฟอร์มไม่มีช่อง R1/R2/RE) | IC 1.130000 mA · VCE 9.514000 V (ไม่ต้องกรอก RE) | Mode: Fixed Bias · VB 0.70 V · VE 0.00 V · VC 9.51 V · VCE 9.51 V · IB 11.3 µA · IC 1.13 mA · IE 1.14 mA | OpenCode Browser | PASS | Snapshot หลังส่งฟอร์ม + ค่า `rb=1 MΩ` ในฟอร์มที่คงอยู่ |
-| A3 · Emitter | Emitter · RB=1 MΩ, RE=1 kΩ | IC 1.026340 mA · VCE 8.705450 V | Mode: Emitter Bias · VB 1.74 V · VE 1.04 V · VC 9.74 V · VCE 8.71 V · IB 10.3 µA · IC 1.03 mA · IE 1.04 mA | OpenCode Browser | PASS | Snapshot หลังส่งฟอร์ม |
-| A4 · เปลี่ยนค่าเดียว | Emitter · เหมือน A3 แต่ RE=2 kΩ | IC ลดจาก A3 → 0.940100 mA · VCE 8.032779 V | Mode: Emitter Bias (คงเดิม) · VB 2.60 V · VE 1.90 V · VC 9.93 V · VCE 8.03 V · IB 9.4 µA · IC 0.94 mA · IE 0.95 mA | OpenCode Browser | PASS | `docs/images/lab03-a4-emitter.png` |
-| A5 · อินพุตผิด | Fixed · RB=0 | มีข้อความให้แก้ RB, เว็บไม่ล่ม, ไม่มีผลรอบก่อน | ใต้ช่อง RB ขึ้น `Must be greater than 0.` · ไม่มีตารางผล · ไม่มี `Mode:` ค้างจากรอบก่อน · โหมดยังเป็น Fixed Bias และ RB=0 ยังอยู่ในฟอร์ม | OpenCode Browser | PASS | `docs/images/lab03-a5-rb-error.png` |
+หน่วย: อินพุตแรงดันเป็น V, ตัวต้านทานเป็น kΩ/MΩ; ผลลัพธ์ VB/VE/VC/VCE เป็น V,
+IB เป็น µA, IC/IE เป็น mA
+
+| กรณี | อินพุต (โหมด + ค่าที่กรอก) | ค่าคาดหมาย | ผลจริงจากหน้าเว็บ | หน่วย | วิธีตรวจ | สถานะ | หลักฐาน |
+|---|---|---|---|---|---|---|---|
+| A1 · โหมดเดิม | Divider · R1=100 kΩ, R2=22 kΩ, RE=1 kΩ, VCC=12 V | IC 1.229858 · VCE 8.052155 และตรงกับ Lab 2 | VB 1.94 · VE 1.24 · VC 9.29 · VCE 8.05 · IB 12.3 · IC 1.23 · IE 1.24 | V, µA, mA | OpenCode Browser | PASS | ข้อความคัดจากหน้าเว็บ A1 ด้านล่าง + ตรงกับ baseline Lab 2 |
+| A2 · Fixed | Fixed · RB=1 MΩ, VCC=12 V (ฟอร์มไม่มีช่อง R1/R2/RE) | IC 1.130000 · VCE 9.514000 (ไม่ต้องกรอก RE) | VB 0.70 · VE 0.00 · VC 9.51 · VCE 9.51 · IB 11.3 · IC 1.13 · IE 1.14 | V, µA, mA | OpenCode Browser | PASS | ข้อความคัดจากหน้าเว็บ + ค่า `rb=1 MΩ` ในฟอร์มที่คงอยู่ |
+| A3 · Emitter | Emitter · RB=1 MΩ, RE=1 kΩ, VCC=12 V | IC 1.026340 · VCE 8.705450 | VB 1.74 · VE 1.04 · VC 9.74 · VCE 8.71 · IB 10.3 · IC 1.03 · IE 1.04 | V, µA, mA | OpenCode Browser | PASS | ข้อความคัดจากหน้าเว็บ |
+| A4 · เปลี่ยนค่าเดียว | Emitter · เหมือน A3 แต่ RE=2 kΩ, VCC=12 V | IC ลดจาก A3 → 0.940100 · VCE 8.032779 | VB 2.60 · VE 1.90 · VC 9.93 · VCE 8.03 · IB 9.4 · IC 0.94 · IE 0.95 | V, µA, mA | OpenCode Browser | PASS | ข้อความคัดจากหน้าเว็บ A4 ด้านล่าง + ภาพ `docs/images/lab03-a4-emitter.png` |
+| A5 · อินพุตผิด | Fixed · RB=0, VCC=12 V | มีข้อความให้แก้ RB, เว็บไม่ล่ม, ไม่มีผลรอบก่อน | ใต้ช่อง RB ขึ้น `Must be greater than 0.` · ไม่มีตารางผล · ไม่มี `Mode:` ค้างจากรอบก่อน · โหมดยังเป็น Fixed Bias | — (ไม่มีผลลัพธ์) | OpenCode Browser | PASS | ข้อความคัดจากหน้าเว็บ A5 ด้านล่าง + ภาพ `docs/images/lab03-a5-rb-error.png` |
+
+### หลักฐานข้อความคัดจากหน้าเว็บ
+
+A1 (Divider) — อ่านจากตารางผลหลังกด Calculate:
+
+```
+Mode: Voltage Divider Bias
+VB 1.94 V    VE 1.24 V    VC 9.29 V    VCE 8.05 V
+IB 12.3 µA   IC 1.23 mA   IE 1.24 mA
+```
+
+A4 (Emitter, RE=2 kΩ) — อ่านจากตารางผลและ schematic ในหน้าเดียวกัน:
+
+```
+Mode: Emitter Bias
+VB 2.60 V    VE 1.90 V    VC 9.93 V    VCE 8.03 V
+IB 9.4 µA    IC 0.94 mA   IE 0.95 mA
+Schematic: RB 1 MΩ · RC 2.2 kΩ · RE 2 kΩ
+```
+
+A5 (Fixed, RB=0) — อ่านใต้ช่อง RB และตรวจว่าไม่มีตารางผล:
+
+```
+Must be greater than 0.
+```
+
+พร้อมกันนั้นหน้าเว็บยังมี `aria-label="Fixed biased NPN common-emitter circuit"`
+และไม่มีตารางผลหรือค่า `Mode:` จากรอบก่อน
+
+A2 และ A3 ใช้ snapshot ของหน้า `/calculate` หลังส่งฟอร์มจริง โดยค่าที่อ่านได้
+คือตัวเลขในคอลัมน์ "ผลจริงจากหน้าเว็บ" ข้างต้น (ไม่มีไฟล์ภาพแยก)
 
 ### หมายเหตุวิธีตรวจ
 
